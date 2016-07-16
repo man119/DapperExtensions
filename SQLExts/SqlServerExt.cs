@@ -186,7 +186,7 @@ namespace DapperExtensions.SqlServerExt
             }
             else
             {
-                throw new ArgumentException("表" + sqls.TableName + "没有主键，无法GetById。");
+                throw new ArgumentException("表" + sqls.TableName + "没有主键，无法GetByIds。");
             }
         }
 
@@ -213,7 +213,7 @@ namespace DapperExtensions.SqlServerExt
             }
             else
             {
-                throw new ArgumentException("表" + sqls.TableName + "没有主键，无法GetById。");
+                throw new ArgumentException("表" + sqls.TableName + "没有主键，无法GetByIdsDynamic。");
             }
         }
 
