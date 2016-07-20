@@ -4,6 +4,7 @@ SqlServer、MySQL、SQLite、PostgreSQL、Oracle(由于Oracle拓展后没有经�
 
 使用方法
 1、首先是实体层
+<code>
 using DapperExtensions;
 
 Table("People")]  //表示表名为People，默认不填的话用类名作为表名
@@ -22,7 +23,7 @@ public class People
     [Computed]
     public string xxx { get; set; }
 }
-
+</code>
 2、开始使用，5种数据库分别引用为
 using DapperExtensions.SqlServerExt;
 using DapperExtensions.MySQLExt;
