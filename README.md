@@ -4,9 +4,9 @@ SqlServer、MySQL、SQLite、PostgreSQL、Oracle(由于Oracle拓展后没有经�
 
 使用方法
 1、首先是实体层
+<pre>
 <code>
 using DapperExtensions;
-
 Table("People")]  //表示表名为People，默认不填的话用类名作为表名
 public class People
 {
@@ -24,7 +24,10 @@ public class People
     public string xxx { get; set; }
 }
 </code>
+</pre>
 2、开始使用，5种数据库分别引用为
+<pre>
+<code>
 using DapperExtensions.SqlServerExt;
 using DapperExtensions.MySQLExt;
 using DapperExtensions.SqLiteExt;
@@ -50,5 +53,6 @@ using (var conn = GetConn())
     dynamic result = conn.Insert(p); //拓展了Insert方法
     p = conn.GetById<People>(1);  //GetById方法
 }
-
+</code>
+</pre>
 对于conn还有很多方法进行了拓展，修改，删除，查询，分页等等。就不一一演示了。
