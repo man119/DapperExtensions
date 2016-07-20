@@ -3,7 +3,7 @@ Dapper拓展，需要Dapper版本≥1.50,本类库基于Dapper拓展了5种数�
 SqlServer、MySQL、SQLite、PostgreSQL、Oracle(由于Oracle拓展后没有经过测试，有BUG还望指正)
 
 使用方法
-1、首先是实体层
+1、首先是实体层\r\n
 using DapperExtensions;
 
 Table("People")]  //表示表名为People，默认不填的话用类名作为表名
@@ -22,7 +22,6 @@ public class People
     [Computed]
     public string xxx { get; set; }
 }
-a
 
 2、开始使用，5种数据库分别引用为
 using DapperExtensions.SqlServerExt;
