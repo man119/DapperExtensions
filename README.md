@@ -12,8 +12,8 @@ Table("People")]  //表示表名为People，默认不填的话用类名作为表
 public class People
 {
     [Key(true)]  //[Key(true)] 表示主键，并且是自增。 [Key(false)] //表示主键，非自增。
-    public int id { get; set; } //这些不标注的属性，表示数据库字段
-    public string name { get; set; }
+    public int id { get; set; } 
+    public string name { get; set; } //这些不标注的属性，表示数据库字段
     public int sex { get; set; }
     public string age { get; set; }
     
