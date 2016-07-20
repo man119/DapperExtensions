@@ -92,6 +92,35 @@ namespace DapperExtensions.SqLiteExt
 
 
         /// <summary>
+        /// 根据Id，若存在则更新，不存在就修改
+        /// </summary>
+        public static int InsertOrUpdate(this IDbConnection conn, object entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(entity.GetType());
+            if (sqls.HasKey)
+            {
+                int result = UpdateById(conn, entity, updateFields, transaction, commandTimeout);
+                if (result == 0)
+                {
+                    if (sqls.IsIdentity)
+                    {
+                        result = InsertIdentity(conn, entity, transaction, commandTimeout);
+                    }
+                    else
+                    {
+                        result = Insert(conn, entity, transaction, commandTimeout);
+                    }
+                }
+
+                return result;
+            }
+            else
+            {
+                throw new ArgumentException("表" + sqls.TableName + "没有自增键，无法进行InsertOrUpdate。");
+            }
+        }
+
+        /// <summary>
         /// 根据主键返回实体Base
         /// returnFields需要返回的列，用逗号隔开。默认null，返回所有列
         /// </summary>
