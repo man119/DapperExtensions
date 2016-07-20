@@ -34,7 +34,9 @@ using DapperExtensions.MySQLExt;
 using DapperExtensions.SqLiteExt;
 using DapperExtensions.PostgreSQLExt;
 using DapperExtensions.OracleExt;
+
 选择你要访问的数据库类型using，这边我Sqlserver为例子
+
 using DapperExtensions.SqlServerExt;
 
 public static IDbConnection GetConn() //获取sql数据库连接，这边你可以用MySql、SQLlite等五种数据库Connection
