@@ -22,6 +22,7 @@ public class People
     [Computed]
     public string xxx { get; set; }
 }
+a
 
 2、开始使用，5种数据库分别引用为
 using DapperExtensions.SqlServerExt;
