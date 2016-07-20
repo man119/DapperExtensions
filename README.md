@@ -7,6 +7,7 @@ SqlServer、MySQL、SQLite、PostgreSQL、Oracle(由于Oracle拓展后没有经�
 <pre>
 <code>
 using DapperExtensions;
+
 Table("People")]  //表示表名为People，默认不填的话用类名作为表名
 public class People
 {
