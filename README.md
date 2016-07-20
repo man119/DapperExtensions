@@ -14,7 +14,7 @@ public class People
     public string name { get; set; }
     public int sex { get; set; }
     public string age { get; set; }
-
+    
     [Computed] //[Computed] 表示这个属性为非数据库字段，在拓展方法Insert UpdateById等中，就不会把忽略列加进去
     public string ok { get; set; }
     [Computed]
