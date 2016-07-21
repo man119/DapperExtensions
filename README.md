@@ -1,9 +1,9 @@
 # DapperExtensions
-Dapper拓展，需要Dapper版本≥1.50,本类库基于Dapper拓展了5种数据库,分别为
+Dapper拓展方法，需要Dapper版本≥1.50,本类库基于Dapper对五种数据库进行了拓展,分别为
 SqlServer、MySQL、SQLite、PostgreSQL、Oracle(由于Oracle拓展后没有经过测试，有BUG还望指正)
 
 使用方法
-1、首先是实体层
+1、首先建立实体层
 <pre>
 <code>
 using DapperExtensions;
@@ -17,7 +17,7 @@ public class People
     public int sex { get; set; }
     public string age { get; set; }
     
-    [Computed] //[Computed] 表示这个属性为非数据库字段，在拓展方法Insert UpdateById等中，就不会把忽略列加进去
+    [Computed] //[Computed] 表示这个属性为非数据库字段，在拓展方法Insert Update等中，就不会把该属性传递进去
     public string ok { get; set; }
     [Computed]
     public string address { get; set; }
@@ -26,7 +26,7 @@ public class People
 }
 </code>
 </pre>
-2、开始使用，5种数据库分别引用为
+2、开始使用，五种数据库拓展的命名空间分别为
 <pre>
 <code>
 using DapperExtensions.SqlServerExt;
@@ -35,7 +35,7 @@ using DapperExtensions.SqLiteExt;
 using DapperExtensions.PostgreSQLExt;
 using DapperExtensions.OracleExt;
 
-选择你要访问的数据库类型using，这边我Sqlserver为例子
+选择你要访问的数据库进行命名空间的引用，这边我以Sqlserver为例子
 
 using DapperExtensions.SqlServerExt;
 
@@ -58,4 +58,4 @@ using (var conn = GetConn())
 }
 </code>
 </pre>
-对于conn还有很多方法进行了拓展，修改，删除，查询，分页等等。就不一一演示了。
+对于conn总共进行了30几个拓展方法，修改，删除，查询，分页等等。就不一一演示了。
