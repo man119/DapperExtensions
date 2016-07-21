@@ -400,6 +400,17 @@ namespace DapperExtensions.MySQLExt
         }
 
         /// <summary>
+        /// 根据条件修改数据
+        /// </summary>
+        public static int UpdateByWhere<T>(this IDbConnection conn, string updateFields, string where, object entity, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            updateFields = DapperExtCommon.GetFieldsEqStr(updateFields.Split(',').ToList(), "`", "`");
+            string sql = string.Format("UPDATE `{0}` SET {1} {2}", sqls.TableName, updateFields, where);
+            return conn.Execute(sql, entity, transaction, commandTimeout);
+        }
+
+        /// <summary>
         /// 获取总数
         /// </summary>
         /// <returns></returns>
@@ -518,6 +529,48 @@ namespace DapperExtensions.MySQLExt
                 skip = (pageIndex - 1) * pageSize;
             }
             return GetBySkip<Table, T>(conn, skip, pageSize, returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 根据查询条件获取数据
+        /// </summary>
+        private static IEnumerable<T> GetByWhereBase<T>(this IDbConnection conn, Type t, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(t);
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+            string sql = string.Format("SELECT {0} FROM `{1}` {2} {3}", returnFields, sqls.TableName, where, orderBy);
+
+            return conn.Query<T>(sql, param, transaction, true, commandTimeout);
+        }
+
+        /// <summary>
+        /// 根据查询条件获取Dynamic数据
+        /// </summary>
+        public static IEnumerable<dynamic> GetByWhereDynamic<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+            string sql = string.Format("SELECT {0} FROM `{1}` {2} {3}", returnFields, sqls.TableName, where, orderBy);
+
+            return conn.Query(sql, param, transaction, true, commandTimeout);
+        }
+
+        /// <summary>
+        /// 根据查询条件获取数据
+        /// </summary>
+        public static IEnumerable<T> GetByWhere<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByWhereBase<T>(conn, typeof(T), returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 根据查询条件获取数据
+        /// </summary>
+        public static IEnumerable<T> GetByWhere<Table, T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByWhereBase<T>(conn, typeof(Table), returnFields, where, param, orderBy, transaction, commandTimeout);
         }
     }
 }
