@@ -363,6 +363,16 @@ namespace DapperExtensions.OracleExt
         }
 
         /// <summary>
+        /// 根据条件删除
+        /// </summary>
+        public static int DeleteByWhere<T>(this IDbConnection conn, string where, object param = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            string sql = string.Format("DELETE FROM \"{0}\" {1}", sqls.TableName, where);
+            return conn.Execute(sql, param, transaction, commandTimeout);
+        }
+
+        /// <summary>
         /// 根据主键修改数据
         /// </summary>
         public static int UpdateById(this IDbConnection conn, object entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
