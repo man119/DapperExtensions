@@ -8,7 +8,7 @@ Dapper下载地址：
 https://www.nuget.org/packages/Dapper/
 https://github.com/StackExchange/dapper-dot-net
 </code>
-<pre>
+</pre>
 使用方法
 1、首先建立实体层
 <pre>
