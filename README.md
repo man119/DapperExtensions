@@ -2,6 +2,13 @@
 Dapper拓展方法，需要Dapper版本≥1.50,本类库基于Dapper对五种数据库进行了拓展,分别为
 SqlServer、MySQL、SQLite、PostgreSQL、Oracle(由于Oracle拓展后没有经过测试，有BUG还望指正)
 
+<pre>
+<code>
+Dapper下载地址：
+https://www.nuget.org/packages/Dapper/
+https://github.com/StackExchange/dapper-dot-net
+</code>
+<pre>
 使用方法
 1、首先建立实体层
 <pre>
