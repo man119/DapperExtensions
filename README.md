@@ -18,7 +18,7 @@ using DapperExtensions;
 Table("People")]  //表示表名为People，默认不填的话用类名作为表名
 public class People
 {
-    [Key(true)]  //[Key(true)] 表示主键，并且是自增。 [Key(false)] //表示主键，非自增。
+    [Key(true)]  //[Key(true)] 表示主键，并且是自增identity。 [Key(false)] //表示主键，非自增no identity。
     public int id { get; set; } 
     public string name { get; set; } //这些不标注的属性，表示数据库字段
     public int sex { get; set; }
