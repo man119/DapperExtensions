@@ -66,3 +66,5 @@ using (var conn = GetConn())
 </code>
 </pre>
 对于conn总共进行了30几个拓展方法，修改，删除，查询，分页等等。就不一一演示了。
+在V2.1版本中提供了CodeSmith模板，更快速的生成Model和DAL层，更快速度的搭建项目，下载地址：
+https://github.com/znyet/DapperExtensions/releases/tag/V2.1
