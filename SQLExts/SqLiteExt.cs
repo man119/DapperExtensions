@@ -571,5 +571,36 @@ namespace DapperExtensions.SqLiteExt
         {
             return GetByWhereBase<T>(conn, typeof(Table), returnFields, where, param, orderBy, transaction, commandTimeout);
         }
+
+        /// <summary>
+        /// 返回DataTable
+        /// </summary>
+        public static DataTable GetDataTable(this IDbConnection conn, string sql, object param = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return DapperExtAllSQL.GetDataTableBase(conn, sql, param, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 返回DataSet
+        /// </summary>
+        public static DataSet GetDataSet(this IDbConnection conn, string sql, object param = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return DapperExtAllSQL.GetDataSetBase(conn, sql, param, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 获取表结构，返回DataTable
+        /// </summary>
+        public static DataTable GetSchemaTable<T>(this IDbConnection conn, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (returnFields == null)
+            {
+                returnFields = sqls.AllFields;
+            }
+
+            string sql = string.Format("SELECT {0} FROM [{1}] LIMIT 0", returnFields, sqls.TableName);
+            return GetDataTable(conn, sql, null, transaction, commandTimeout);
+        }
     }
 }

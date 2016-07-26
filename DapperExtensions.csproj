@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DapperExtAllSQL.cs" />
     <Compile Include="DapperExtAttributes.cs" />
     <Compile Include="DapperExtCommon.cs" />
     <Compile Include="DapperExtSqls.cs" />
