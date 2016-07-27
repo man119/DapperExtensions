@@ -64,7 +64,7 @@ using (var conn = GetConn())
     
     dynamic result = conn.Insert(p); //拓展了Insert方法
     
-    int result = conn.conn.InsertIdentity(p); //插入自增键方法
+    int result = conn.InsertIdentity(p); //插入自增键方法
     
     People pp = conn.GetById<People>(1);  //GetById方法
     
