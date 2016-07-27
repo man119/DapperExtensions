@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 
 using Dapper;
+using System.Data.SqlClient;
 
 namespace DapperExtensions.SqlServerExt
 {
@@ -632,6 +633,77 @@ namespace DapperExtensions.SqlServerExt
 
             string sql = string.Format("SELECT TOP (0) {0} FROM [{1}] WITH(NOLOCK)", returnFields, sqls.TableName);
             return GetDataTable(conn, sql, null, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 大批量插入数据
+        /// 默认自增主键
+        /// insert_identity为true时允许插入自增主键
+        /// </summary>
+        public static void BulkCopy<T>(this IDbConnection conn, DataTable dt, IDbTransaction transaction, string fields = null, bool insert_identity = false, int batchSize = 5000, int commandTimeout = 500000)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            SqlBulkCopyOptions option = SqlBulkCopyOptions.Default; //Default不插入主键
+            if (insert_identity == true)
+            {
+                option = SqlBulkCopyOptions.KeepIdentity;
+            }
+
+            using (SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)conn, option, (SqlTransaction)transaction))
+            {
+                bulkCopy.BatchSize = batchSize;
+                bulkCopy.BulkCopyTimeout = commandTimeout;
+                bulkCopy.DestinationTableName = sqls.TableName;
+                if (fields != null)
+                {
+
+                    foreach (var item in fields.Split(','))
+                    {
+                        bulkCopy.ColumnMappings.Add(item, item);
+                    }
+                }
+                else
+                {
+
+                    foreach (DataColumn col in dt.Columns)
+                    {
+                        bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+                    }
+                }
+                bulkCopy.WriteToServer(dt);
+            }
+        }
+
+        /// <summary>
+        /// 根据主键大批量更新数据
+        /// 要求表有主键，根据主键更新数据
+        /// updateFields修改个别字段一定要加上主键字段
+        /// </summary>
+        public static void BulkUpdate<T>(this IDbConnection conn, DataTable dt, IDbTransaction transaction, string updateFields = null, int batchSize = 5000, int commandTimeout = 500000)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            using (SqlCommand comm = (SqlCommand)conn.CreateCommand())
+            {
+                comm.CommandTimeout = commandTimeout;
+                comm.CommandType = CommandType.Text;
+                using (SqlDataAdapter adapter = new SqlDataAdapter(comm))
+                {
+                    using (SqlCommandBuilder commandBulider = new SqlCommandBuilder(adapter))
+                    {
+                        commandBulider.ConflictOption = ConflictOption.OverwriteChanges; //根据主键更新
+                        adapter.UpdateBatchSize = batchSize;
+                        adapter.SelectCommand.Transaction = (SqlTransaction)transaction;
+                        if (updateFields == null)
+                        {
+                            updateFields = sqls.AllFields;
+                        }
+                        adapter.SelectCommand.CommandText = string.Format("SELECT TOP (0) {0} FROM [{1}]", updateFields, sqls.TableName);
+                        adapter.Update(dt.GetChanges());
+                    }
+                }
+            }
+
+
         }
     }
 }
