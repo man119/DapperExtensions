@@ -68,9 +68,9 @@ using (var conn = GetConn())
     
     People pp = conn.GetById<People>(1);  //GetById方法
     
-    IEnumerable<People> list = conn.GetByIds<People>(new int[] { 1, 2, 3} );//根据id串获取实体列表
+    var list = conn.GetByIds<People>(new int[] { 1, 2, 3} );//根据id串获取实体列表
     
-    IEnumerable<People> peopleList = conn.GetAll<People>(); //获取整张表数据
+    var peopleList = conn.GetAll<People>(); //获取整张表数据
     
     int result = conn.DeleteById<People>(1); //根据主键id删除数据
     
@@ -87,9 +87,9 @@ using (var conn = GetConn())
     
     long total = conn.GetTotal<People>(); //获取记录总数。可以指定查询条件
     
-    IEnumerable<People> data = conn.GetBySkip<People>(1, 3);//分页，可以指定查询条件
+    var data = conn.GetBySkip<People>(1, 3);//分页，可以指定查询条件
     
-    Enumerable<dynamic> data = conn.GetByPageIndex<People>(1,3); //分页。可以指定查询条件
+    var data = conn.GetByPageIndex<People>(1,3); //分页。可以指定查询条件
     
     People p = new People();
     p.id = -1;
@@ -104,8 +104,20 @@ using (var conn = GetConn())
     
     var result = conn.GetByWhere<People>(); //根据查询条件返回People表数据
     
-    conn.BulkCopy<People>(dt, tran);  //大批量数据插入
-    
+    var tran = conn.BeginTransaction();
+    try
+    {
+        conn.BulkCopy<People>(dt, tran);  //大批量数据插入
+        
+        conn.BulkUpdate<People>(dt,tran); //根据主键大批量数据更新
+        
+        tran.Commit();
+    }
+    catch
+    {
+        tran.Rollback();
+    }
+    tran.Dispose();
     .......更多方法就不一一列举了
 }
 </code>
