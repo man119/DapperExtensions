@@ -107,7 +107,7 @@ using (var conn = GetConn())
     var tran = conn.BeginTransaction();
     try
     {
-        conn.BulkCopy<People>(dt, tran);  //大批量数据插入
+        conn.BulkCopy<People>(dt, tran);  //大批量数据插入,可以指定是否插入自增id
         
         conn.BulkUpdate<People>(dt,tran); //根据主键大批量数据更新
         
