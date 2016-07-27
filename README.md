@@ -96,7 +96,7 @@ using (var conn = GetConn())
     p.name = "蝴蝶";
     p.sex = 11;
     p.age = "我11岁了";
-    int result = conn.InsertOrUpdate(sc); //根据主键存在则更新，不存在则修改
+    int result = conn.InsertOrUpdate(sc); //根据主键存在则更新，不存在则插入
     
     int result = conn.DeleteByWhere<People>(); //根据查询条件删除
     
