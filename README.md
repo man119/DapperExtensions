@@ -61,12 +61,56 @@ using (var conn = GetConn())
     p.name = "张三";
     p.sex = 100;
     p.age = "我100岁了";
+    
     dynamic result = conn.Insert(p); //拓展了Insert方法
-    p = conn.GetById<People>(1);  //GetById方法
+    
+    int result = conn.conn.InsertIdentity(p); //插入自增键方法
+    
+    People pp = conn.GetById<People>(1);  //GetById方法
+    
+    IEnumerable<People> list = conn.GetByIds<People>(new int[] { 1, 2, 3} );//根据id串获取实体列表
+    
+    IEnumerable<People> peopleList = conn.GetAll<People>(); //获取整张表数据
+    
+    int result = conn.DeleteById<People>(1); //根据主键id删除数据
+    
+    int result = conn.DeleteByIds<People>(new int[] { 1, 3 }); //根据id串删除数据
+    
+    int result = conn.DeleteAll<People>(); //删除整张表数据
+    
+    People p = new People();
+    p.id = 1;
+    p.name = "张三";
+    p.sex = 27;
+    p.age = "我27岁";
+    int result = conn.UpdateById(p); //根据主键修改数据，可以指定要修改的字段
+    
+    long total = conn.GetTotal<People>(); //获取记录总数。可以指定查询条件
+    
+    IEnumerable<People> data = conn.GetBySkip<People>(1, 3);//分页，可以指定查询条件
+    
+    Enumerable<dynamic> data = conn.GetByPageIndex<People>(1,3); //分页。可以指定查询条件
+    
+    People p = new People();
+    p.id = -1;
+    p.name = "蝴蝶";
+    p.sex = 11;
+    p.age = "我11岁了";
+    int result = conn.InsertOrUpdate(sc); //根据主键存在则更新，不存在则修改
+    
+    int result = conn.DeleteByWhere<People>(); //根据查询条件删除
+    
+    int result = conn.UpdateByWhere<People>(); //根据查询条件修改数据
+    
+    var result = conn.GetByWhere<People>(); //根据查询条件返回People表数据
+    
+    conn.BulkCopy<People>(dt, tran);  //大批量数据插入
+    
+    .......更多方法就不一一列举了
 }
 </code>
 </pre>
-对于conn总共进行了30几个拓展方法，修改，删除，查询，分页等等。就不一一演示了。
+对于conn总共进行了30几个拓展方法，修改，删除，查询，分页等等。
 在V2.1版本中提供了CodeSmith模板，更快速的生成Model和DAL层，更快速度的搭建项目，下载地址：
 <br/>最新版：https://github.com/znyet/DapperExtensions/releases
 <br/>CodeSmith模板：https://github.com/znyet/DapperExtensions/releases/tag/V2.1
