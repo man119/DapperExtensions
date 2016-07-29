@@ -91,7 +91,7 @@ namespace DapperExtensions.OracleExt
         }
 
         /// <summary>
-        /// 根据Id，若存在则更新，不存在就修改
+        /// 根据Id，若存在则更新，不存在就插入，连id都一起插入
         /// </summary>
         public static int InsertOrUpdate(this IDbConnection conn, object entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
