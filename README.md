@@ -122,5 +122,5 @@ using (var conn = GetConn())
 }
 </code>
 </pre>
-对于conn总共进行了30几个拓展方法，修改，删除，查询，分页等等。另外编译了一份CodeSmith模板，快速生成Model和DAL等
+对于conn总共进行了30几个拓展方法，修改，删除，查询，分页等等。另外编写了一份CodeSmith模板，快速生成Model和DAL等
 <br/>最新版：https://github.com/znyet/DapperExtensions/releases
