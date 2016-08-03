@@ -36,6 +36,7 @@ namespace DapperExtensions.SqlServerExt
                 if (sqls.HasKey && sqls.IsIdentity) //有主键并且是自增
                 {
                     sqls.InsertSql = string.Format("INSERT INTO [{0}]({1})VALUES({2});SELECT @@IDENTITY", sqls.TableName, FieldsExtKey, FieldsAtExtKey);
+                    sqls.InsertBatchSql = string.Format("INSERT INTO [{0}]({1})VALUES({2})", sqls.TableName, FieldsExtKey, FieldsAtExtKey);
                     sqls.InsertIdentitySql = string.Format("SET IDENTITY_INSERT [{0}] ON;INSERT INTO [{0}]({1})VALUES({2});SET IDENTITY_INSERT [{0}] OFF", sqls.TableName, Fields, FieldsAt);
                 }
                 else
@@ -60,11 +61,11 @@ namespace DapperExtensions.SqlServerExt
         }
 
         /// <summary>
-        /// 新增
+        /// 新增单条记录
         /// </summary>
-        public static dynamic Insert(this IDbConnection conn, object entity, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static dynamic Insert<T>(this IDbConnection conn, T entity, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            DapperExtSqls sqls = GetDapperExtSqls(entity.GetType());
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey && sqls.IsIdentity)
             {
                 return conn.ExecuteScalar<dynamic>(sqls.InsertSql, entity, transaction, commandTimeout);
@@ -76,11 +77,27 @@ namespace DapperExtensions.SqlServerExt
         }
 
         /// <summary>
+        /// 新增多条记录
+        /// </summary>
+        public static int InsertBatch<T>(this IDbConnection conn, IEnumerable<T> entitys, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (sqls.HasKey && sqls.IsIdentity)
+            {
+                return conn.Execute(sqls.InsertBatchSql, entitys, transaction, commandTimeout);
+            }
+            else
+            {
+                return conn.Execute(sqls.InsertSql, entitys, transaction, commandTimeout);
+            }
+        }
+
+        /// <summary>
         /// 新增(插入自增键)
         /// </summary>
-        public static int InsertIdentity(this IDbConnection conn, object entity, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static int InsertIdentity<T>(this IDbConnection conn, T entity, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            DapperExtSqls sqls = GetDapperExtSqls(entity.GetType());
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey && sqls.IsIdentity)
             {
                 return conn.Execute(sqls.InsertIdentitySql, entity, transaction, commandTimeout);
@@ -91,24 +108,41 @@ namespace DapperExtensions.SqlServerExt
             }
         }
 
+
+        /// <summary>
+        /// 新增多条记录(插入自增键)
+        /// </summary>
+        public static int InsertIdentityBatch<T>(this IDbConnection conn, IEnumerable<T> entitys, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (sqls.HasKey && sqls.IsIdentity)
+            {
+                return conn.Execute(sqls.InsertIdentitySql, entitys, transaction, commandTimeout);
+            }
+            else
+            {
+                throw new ArgumentException("表" + sqls.TableName + "没有自增键，无法进行InsertIdentity。");
+            }
+        }
+
         /// <summary>
         /// 根据Id，若存在则更新，不存在就插入，连id都一起插入
         /// </summary>
-        public static int InsertOrUpdate(this IDbConnection conn, object entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static int InsertOrUpdate<T>(this IDbConnection conn, T entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            DapperExtSqls sqls = GetDapperExtSqls(entity.GetType());
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey)
             {
-                int result = UpdateById(conn, entity, updateFields, transaction, commandTimeout);
+                int result = UpdateById<T>(conn, entity, updateFields, transaction, commandTimeout);
                 if (result == 0)
                 {
                     if (sqls.IsIdentity)
                     {
-                        result = InsertIdentity(conn, entity, transaction, commandTimeout);
+                        result = InsertIdentity<T>(conn, entity, transaction, commandTimeout);
                     }
                     else
                     {
-                        result = Insert(conn, entity, transaction, commandTimeout);
+                        result = Insert<T>(conn, entity, transaction, commandTimeout);
                     }
                 }
 
@@ -377,9 +411,9 @@ namespace DapperExtensions.SqlServerExt
         /// <summary>
         /// 根据主键修改数据
         /// </summary>
-        public static int UpdateById(this IDbConnection conn, object entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static int UpdateById<T>(this IDbConnection conn, T entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            DapperExtSqls sqls = GetDapperExtSqls(entity.GetType());
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey)
             {
                 if (updateFields == null)
@@ -391,6 +425,31 @@ namespace DapperExtensions.SqlServerExt
                     string updateList = DapperExtCommon.GetFieldsEqStr(updateFields.Split(',').ToList(), "[", "]");
                     string sql = string.Format("UPDATE [{0}] SET {1} WHERE [{2}]=@{2}", sqls.TableName, updateList, sqls.KeyName);
                     return conn.Execute(sql, entity, transaction, commandTimeout);
+                }
+            }
+            else
+            {
+                throw new ArgumentException("表" + sqls.TableName + "没有主键，无法UpdateById。");
+            }
+        }
+
+        /// <summary>
+        /// 根据主键修改数据(批量修改)
+        /// </summary>
+        public static int UpdateByIdBatch<T>(this IDbConnection conn, IEnumerable<T> entitys, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (sqls.HasKey)
+            {
+                if (updateFields == null)
+                {
+                    return conn.Execute(sqls.UpdateByIdSql, entitys, transaction, commandTimeout);
+                }
+                else
+                {
+                    string updateList = DapperExtCommon.GetFieldsEqStr(updateFields.Split(',').ToList(), "[", "]");
+                    string sql = string.Format("UPDATE [{0}] SET {1} WHERE [{2}]=@{2}", sqls.TableName, updateList, sqls.KeyName);
+                    return conn.Execute(sql, entitys, transaction, commandTimeout);
                 }
             }
             else
