@@ -78,7 +78,7 @@ namespace DapperExtensions.MySQLExt
         /// <summary>
         /// 新增多条数据
         /// </summary>
-        public static dynamic InsertBatch<T>(this IDbConnection conn, IEnumerable<T> entitys, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static int InsertBatch<T>(this IDbConnection conn, IEnumerable<T> entitys, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey && sqls.IsIdentity)
