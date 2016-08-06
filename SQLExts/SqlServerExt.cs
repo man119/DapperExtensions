@@ -473,11 +473,11 @@ namespace DapperExtensions.SqlServerExt
         /// 获取总数
         /// </summary>
         /// <returns></returns>
-        public static dynamic GetTotal<T>(this IDbConnection conn, string where = null, object param = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static int GetTotal<T>(this IDbConnection conn, string where = null, object param = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             string sql = string.Format("SELECT COUNT(1) FROM [{0}] WITH(NOLOCK) {1}", sqls.TableName, where);
-            return conn.ExecuteScalar<dynamic>(sql, param, transaction, commandTimeout);
+            return conn.ExecuteScalar<int>(sql, param, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -764,5 +764,164 @@ namespace DapperExtensions.SqlServerExt
 
 
         }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        private static IEnumerable<T> GetByPageBase<T>(this IDbConnection conn, Type t, int pageIndex, int pageSize, out int total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(t);
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+
+            if (orderBy == null)
+            {
+                if (sqls.HasKey)
+                {
+                    orderBy = string.Format("ORDER BY [{0}] DESC", sqls.KeyName);
+                }
+                else
+                {
+                    orderBy = string.Format("ORDER BY [{0}]", sqls.AllFieldList.First());
+                }
+            }
+
+            int skip = 0;
+            if (pageIndex > 0)
+            {
+                skip = (pageIndex - 1) * pageSize;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("DECLARE @total INT;SELECT @total = COUNT(1) FROM [{0}] WITH(NOLOCK) {1};SELECT @total;", sqls.TableName, where);
+            sb.Append("IF(@total>0) BEGIN ");
+            if (pageIndex == 1)
+            {
+                sb.AppendFormat("SELECT TOP ({0}) {1} FROM [{2}] WITH(NOLOCK) {3} {4}", pageSize, returnFields, sqls.TableName, where, orderBy);
+            }
+            else
+            {
+                sb.AppendFormat("WITH cte AS (SELECT ROW_NUMBER() OVER({0}) AS rownum,{1} FROM [{2}] WITH(NOLOCK) {3})", orderBy, returnFields, sqls.TableName, where);
+                if (returnFields.Contains(" AS") || returnFields.Contains(" as"))
+                {
+                    sb.AppendFormat("SELECT * FROM cte WHERE cte.rownum BETWEEN {0} AND {1}", skip + 1, skip + pageSize);
+                }
+                else
+                {
+                    sb.AppendFormat("SELECT {0} FROM cte WHERE cte.rownum BETWEEN {1} AND {2}", returnFields, skip + 1, skip + pageSize);
+                }
+            }
+            sb.Append(" END");
+
+            using (var reader = conn.QueryMultiple(sb.ToString(), param, transaction, commandTimeout))
+            {
+                total = reader.ReadFirst<int>();
+                if (total > 0)
+                {
+                    return reader.Read<T>();
+                }
+                else
+                {
+                    return new List<T>();
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        private static IEnumerable<dynamic> GetByPageDynamicBase<T>(this IDbConnection conn, Type t, int pageIndex, int pageSize, out int total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(t);
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+
+            if (orderBy == null)
+            {
+                if (sqls.HasKey)
+                {
+                    orderBy = string.Format("ORDER BY [{0}] DESC", sqls.KeyName);
+                }
+                else
+                {
+                    orderBy = string.Format("ORDER BY [{0}]", sqls.AllFieldList.First());
+                }
+            }
+
+            int skip = 0;
+            if (pageIndex > 0)
+            {
+                skip = (pageIndex - 1) * pageSize;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("DECLARE @total INT;SELECT @total = COUNT(1) FROM [{0}] WITH(NOLOCK) {1};SELECT @total;", sqls.TableName, where);
+            sb.Append("IF(@total>0) BEGIN ");
+            if (pageIndex == 1)
+            {
+                sb.AppendFormat("SELECT TOP ({0}) {1} FROM [{2}] WITH(NOLOCK) {3} {4}", pageSize, returnFields, sqls.TableName, where, orderBy);
+            }
+            else
+            {
+                sb.AppendFormat("WITH cte AS (SELECT ROW_NUMBER() OVER({0}) AS rownum,{1} FROM [{2}] WITH(NOLOCK) {3})", orderBy, returnFields, sqls.TableName, where);
+                if (returnFields.Contains(" AS") || returnFields.Contains(" as"))
+                {
+                    sb.AppendFormat("SELECT * FROM cte WHERE cte.rownum BETWEEN {0} AND {1}", skip + 1, skip + pageSize);
+                }
+                else
+                {
+                    sb.AppendFormat("SELECT {0} FROM cte WHERE cte.rownum BETWEEN {1} AND {2}", returnFields, skip + 1, skip + pageSize);
+                }
+            }
+            sb.Append(" END");
+
+            using (var reader = conn.QueryMultiple(sb.ToString(), param, transaction, commandTimeout))
+            {
+                total = reader.ReadFirst<int>();
+                if (total > 0)
+                {
+                    return reader.Read();
+                }
+                else
+                {
+                    return new List<dynamic>();
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        public static IEnumerable<T> GetByPage<T>(this IDbConnection conn, int pageIndex, int pageSize, out int total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByPageBase<T>(conn, typeof(T), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        public static IEnumerable<T> GetByPage<Table,T>(this IDbConnection conn, int pageIndex, int pageSize, out int total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByPageBase<T>(conn, typeof(Table), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        public static IEnumerable<dynamic> GetByPageDynamic<T>(this IDbConnection conn, int pageIndex, int pageSize, out int total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByPageDynamicBase<T>(conn, typeof(T), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        public static IEnumerable<dynamic> GetByPageDynamic<Table, T>(this IDbConnection conn, int pageIndex, int pageSize, out int total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByPageDynamicBase<T>(conn, typeof(Table), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
     }
 }

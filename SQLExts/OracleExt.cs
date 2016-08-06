@@ -471,11 +471,11 @@ namespace DapperExtensions.OracleExt
         /// 获取总数
         /// </summary>
         /// <returns></returns>
-        public static dynamic GetTotal<T>(this IDbConnection conn, string where = null, object param = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static decimal GetTotal<T>(this IDbConnection conn, string where = null, object param = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             string sql = string.Format("SELECT COUNT(1) FROM \"{0}\" {1}", sqls.TableName, where);
-            return conn.ExecuteScalar<dynamic>(sql, param, transaction, commandTimeout);
+            return conn.ExecuteScalar<decimal>(sql, param, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -669,5 +669,123 @@ namespace DapperExtensions.OracleExt
             string sql = string.Format("SELECT {0} FROM \"{1}\" WHERE rownum=0", returnFields, sqls.TableName);
             return GetDataTable(conn, sql, null, transaction, commandTimeout);
         }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        private static IEnumerable<T> GetByPageBase<T>(this IDbConnection conn, Type t, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+
+            if (orderBy == null)
+            {
+                if (sqls.HasKey)
+                {
+                    orderBy = string.Format("ORDER BY \"{0}\" DESC", sqls.KeyName);
+                }
+                else
+                {
+                    orderBy = string.Format("ORDER BY \"{0}\"", sqls.AllFieldList.First());
+                }
+            }
+
+            int skip = 0;
+            if (pageIndex > 0)
+            {
+                skip = (pageIndex - 1) * pageSize;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("SELECT COUNT(1) FROM \"{0}\" {1};", sqls.TableName, where);
+            sb.Append("SELECT * FROM (");
+            sb.Append("SELECT A.*,ROWNUM RN FROM (");
+            sb.AppendFormat("SELECT {0} FROM \"{1}\" {2} {3}", returnFields, sqls.TableName, where, orderBy);
+            sb.AppendFormat(") A WHERE ROWNUM <= {0}", skip + pageSize);
+            sb.AppendFormat(") WHERE RN > {0}", skip);
+
+            using (var reader = conn.QueryMultiple(sb.ToString(), param, transaction, commandTimeout))
+            {
+                total = reader.ReadFirst<decimal>();
+                return reader.Read<T>();
+            }
+
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        private static IEnumerable<dynamic> GetByPageDynamicBase<T>(this IDbConnection conn, Type t, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+
+            if (orderBy == null)
+            {
+                if (sqls.HasKey)
+                {
+                    orderBy = string.Format("ORDER BY \"{0}\" DESC", sqls.KeyName);
+                }
+                else
+                {
+                    orderBy = string.Format("ORDER BY \"{0}\"", sqls.AllFieldList.First());
+                }
+            }
+
+            int skip = 0;
+            if (pageIndex > 0)
+            {
+                skip = (pageIndex - 1) * pageSize;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("SELECT COUNT(1) FROM \"{0}\" {1};", sqls.TableName, where);
+            sb.Append("SELECT * FROM (");
+            sb.Append("SELECT A.*,ROWNUM RN FROM (");
+            sb.AppendFormat("SELECT {0} FROM \"{1}\" {2} {3}", returnFields, sqls.TableName, where, orderBy);
+            sb.AppendFormat(") A WHERE ROWNUM <= {0}", skip + pageSize);
+            sb.AppendFormat(") WHERE RN > {0}", skip);
+
+            using (var reader = conn.QueryMultiple(sb.ToString(), param, transaction, commandTimeout))
+            {
+                total = reader.ReadFirst<decimal>();
+                return reader.Read();
+            }
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        public static IEnumerable<T> GetByPage<T>(this IDbConnection conn, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByPageBase<T>(conn, typeof(T), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        public static IEnumerable<T> GetByPage<Table, T>(this IDbConnection conn, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByPageBase<T>(conn, typeof(Table), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        public static IEnumerable<dynamic> GetByPageDynamic<T>(this IDbConnection conn, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByPageDynamicBase<T>(conn, typeof(T), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 获取分页数据
+        /// </summary>
+        public static IEnumerable<dynamic> GetByPageDynamic<Table, T>(this IDbConnection conn, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByPageDynamicBase<T>(conn, typeof(Table), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
     }
 }
