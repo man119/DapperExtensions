@@ -763,5 +763,48 @@ namespace DapperExtensions.PostgreSQLExt
         {
             return GetByPageDynamicBase<T>(conn, typeof(Table), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
         }
+
+        /// <summary>
+        /// 根据查询条件获取数据
+        /// </summary>
+        private static T GetByWhereFirstBase<T>(this IDbConnection conn, Type t, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(t);
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+            string sql = string.Format("SELECT {0} FROM \"{1}\" {2} {3}", returnFields, sqls.TableName, where, orderBy);
+
+            return conn.QueryFirstOrDefault<T>(sql, param, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 根据查询条件获取Dynamic数据
+        /// </summary>
+        public static dynamic GetByWhereFirstDynamic<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+            string sql = string.Format("SELECT {0} FROM \"{1}\" {2} {3}", returnFields, sqls.TableName, where, orderBy);
+
+            return conn.QueryFirstOrDefault(sql, param, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 根据查询条件获取数据
+        /// </summary>
+        public static T GetByWhereFirst<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByWhereFirstBase<T>(conn, typeof(T), returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// 根据查询条件获取数据
+        /// </summary>
+        public static T GetByWhereFirst<Table, T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByWhereFirstBase<T>(conn, typeof(Table), returnFields, where, param, orderBy, transaction, commandTimeout);
+        }
+
     }
 }
