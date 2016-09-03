@@ -62,17 +62,10 @@ namespace DapperExtensions.OracleExt
         /// <summary>
         /// 新增
         /// </summary>
-        public static dynamic Insert<T>(this IDbConnection conn, T entity, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static int Insert<T>(this IDbConnection conn, T entity, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
-            if (sqls.HasKey && sqls.IsIdentity)
-            {
-                return conn.ExecuteScalar<dynamic>(sqls.InsertSql, entity, transaction, commandTimeout);
-            }
-            else
-            {
-                return conn.Execute(sqls.InsertSql, entity, transaction, commandTimeout);
-            }
+            return conn.Execute(sqls.InsertSql, entity, transaction, commandTimeout);
         }
 
         /// <summary>

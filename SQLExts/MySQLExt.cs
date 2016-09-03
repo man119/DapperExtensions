@@ -62,12 +62,12 @@ namespace DapperExtensions.MySQLExt
         /// <summary>
         /// 新增
         /// </summary>
-        public static dynamic Insert<T>(this IDbConnection conn, T entity, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static dynamic Insert<T>(this IDbConnection conn, object entity, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            DapperExtSqls sqls = GetDapperExtSqls(entity.GetType());
             if (sqls.HasKey && sqls.IsIdentity)
             {
-                return conn.ExecuteScalar<dynamic>(sqls.InsertSql, entity, transaction, commandTimeout);
+                return conn.ExecuteScalar<T>(sqls.InsertSql, entity, transaction, commandTimeout);
             }
             else
             {
@@ -126,7 +126,7 @@ namespace DapperExtensions.MySQLExt
         /// <summary>
         /// 根据Id，若存在则更新，不存在就插入，连id都一起插入
         /// </summary>
-        public static int InsertOrUpdate<T>(this IDbConnection conn, T entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static dynamic InsertOrUpdate<T>(this IDbConnection conn, T entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey)
@@ -136,11 +136,11 @@ namespace DapperExtensions.MySQLExt
                 {
                     if (sqls.IsIdentity)
                     {
-                        result = InsertIdentity<T>(conn, entity, transaction, commandTimeout);
+                        return InsertIdentity<T>(conn, entity, transaction, commandTimeout);
                     }
                     else
                     {
-                        result = Insert<T>(conn, entity, transaction, commandTimeout);
+                        return Insert<decimal>(conn, entity, transaction, commandTimeout);
                     }
                 }
 
