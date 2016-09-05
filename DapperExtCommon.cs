@@ -108,6 +108,7 @@ namespace DapperExtensions
                     {
                         dapperextsqls.HasKey = true;
                         dapperextsqls.KeyName = item.Name;
+                        dapperextsqls.KeyType = item.PropertyType.Name;
                         KeyAttribute keyAttr = (KeyAttribute)attribute;
                         if (keyAttr.IsIdentity)
                         {

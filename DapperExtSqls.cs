@@ -13,6 +13,8 @@ namespace DapperExtensions
 
         public string KeyName { get; set; } //主键名称
 
+        public string KeyType { get; set; } //主键类型
+
         public IEnumerable<string> AllFieldList { get; set; } //所有列
         public IEnumerable<string> ExceptKeyFieldList { get; set; } //除主键列
         public string AllFields { get; set; }//所有列逗号分隔

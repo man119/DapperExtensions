@@ -63,12 +63,26 @@ namespace DapperExtensions.SqlServerExt
         /// <summary>
         /// 新增单条记录
         /// </summary>
-        public static dynamic Insert<T>(this IDbConnection conn, object entity, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static dynamic Insert<T>(this IDbConnection conn, T entity, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            DapperExtSqls sqls = GetDapperExtSqls(entity.GetType());
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey && sqls.IsIdentity)
             {
-                return conn.ExecuteScalar<T>(sqls.InsertSql, entity, transaction, commandTimeout);
+                switch (sqls.KeyType)
+                {
+                    case "Int32": return conn.ExecuteScalar<int>(sqls.InsertSql, entity, transaction, commandTimeout); //int
+                    case "Int64": return conn.ExecuteScalar<long>(sqls.InsertSql, entity, transaction, commandTimeout); //long
+                    case "Decimal": return conn.ExecuteScalar<decimal>(sqls.InsertSql, entity, transaction, commandTimeout); //decimal
+                    case "UInt32": return conn.ExecuteScalar<uint>(sqls.InsertSql, entity, transaction, commandTimeout); //uint
+                    case "UInt64": return conn.ExecuteScalar<ulong>(sqls.InsertSql, entity, transaction, commandTimeout); //ulong
+                    case "Double": return conn.ExecuteScalar<double>(sqls.InsertSql, entity, transaction, commandTimeout); //double
+                    case "Single": return conn.ExecuteScalar<float>(sqls.InsertSql, entity, transaction, commandTimeout); //float
+                    case "Byte": return conn.ExecuteScalar<byte>(sqls.InsertSql, entity, transaction, commandTimeout);  //byte
+                    case "SByte": return conn.ExecuteScalar<sbyte>(sqls.InsertSql, entity, transaction, commandTimeout); //sbyte
+                    case "Int16": return conn.ExecuteScalar<short>(sqls.InsertSql, entity, transaction, commandTimeout); //short
+                    case "UInt16": return conn.ExecuteScalar<ushort>(sqls.InsertSql, entity, transaction, commandTimeout); //ushort
+                    default: return 0;
+                }
             }
             else
             {
@@ -142,7 +156,7 @@ namespace DapperExtensions.SqlServerExt
                     }
                     else
                     {
-                        return Insert<decimal>(conn, entity, transaction, commandTimeout);
+                        return Insert<T>(conn, entity, transaction, commandTimeout);
                     }
                 }
 
