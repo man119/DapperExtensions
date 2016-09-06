@@ -317,16 +317,16 @@ namespace DapperExtensions.SqlServerExt
         /// 返回整张表数据
         /// returnFields需要返回的列，用逗号隔开。默认null，返回所有列
         /// </summary>
-        private static IEnumerable<T> GetAllBase<T>(this IDbConnection conn, Type t, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        private static IEnumerable<T> GetAllBase<T>(this IDbConnection conn, Type t, string returnFields = null, string orderby = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(t);
             if (returnFields == null)
             {
-                return conn.Query<T>(sqls.GetAllSql, null, transaction, true, commandTimeout);
+                return conn.Query<T>(sqls.GetAllSql + " " + orderby, null, transaction, true, commandTimeout);
             }
             else
             {
-                string sql = string.Format("SELECT {0} FROM [{1}] WITH(NOLOCK)", returnFields, sqls.TableName);
+                string sql = string.Format("SELECT {0} FROM [{1}] WITH(NOLOCK) " + orderby, returnFields, sqls.TableName);
                 return conn.Query<T>(sql, null, transaction, true, commandTimeout);
             }
         }
@@ -335,16 +335,16 @@ namespace DapperExtensions.SqlServerExt
         /// 返回整张表数据
         /// returnFields需要返回的列，用逗号隔开。默认null，返回所有列
         /// </summary>
-        public static IEnumerable<dynamic> GetAllDynamic<T>(this IDbConnection conn, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<dynamic> GetAllDynamic<T>(this IDbConnection conn, string returnFields = null, string orderby = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (returnFields == null)
             {
-                return conn.Query(sqls.GetAllSql, null, transaction, true, commandTimeout);
+                return conn.Query(sqls.GetAllSql + " " + orderby, null, transaction, true, commandTimeout);
             }
             else
             {
-                string sql = string.Format("SELECT {0} FROM [{1}] WITH(NOLOCK)", returnFields, sqls.TableName);
+                string sql = string.Format("SELECT {0} FROM [{1}] WITH(NOLOCK) " + orderby, returnFields, sqls.TableName);
                 return conn.Query(sql, null, transaction, true, commandTimeout);
             }
         }
@@ -353,18 +353,18 @@ namespace DapperExtensions.SqlServerExt
         /// 返回整张表数据
         /// returnFields需要返回的列，用逗号隔开。默认null，返回所有列
         /// </summary>
-        public static IEnumerable<T> GetAll<T>(this IDbConnection conn, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<T> GetAll<T>(this IDbConnection conn, string returnFields = null, string orderby = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetAllBase<T>(conn, typeof(T), returnFields, transaction, commandTimeout);
+            return GetAllBase<T>(conn, typeof(T), returnFields, orderby, transaction, commandTimeout);
         }
 
         /// <summary>
         /// 返回整张表任意类型数据
         /// returnFields需要返回的列，用逗号隔开。默认null，返回所有列
         /// </summary>
-        public static IEnumerable<T> GetAll<Table, T>(this IDbConnection conn, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<T> GetAll<Table, T>(this IDbConnection conn, string returnFields = null, string orderby = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetAllBase<T>(conn, typeof(Table), returnFields, transaction, commandTimeout);
+            return GetAllBase<T>(conn, typeof(Table), returnFields, orderby, transaction, commandTimeout);
         }
 
         /// <summary>
