@@ -20,7 +20,6 @@ namespace DapperExtensions
         public string AllFields { get; set; }//所有列逗号分隔
 
         public string InsertSql { get; set; }
-        public string InsertBatchSql { get; set; }
         public string InsertIdentitySql { get; set; }
         public string GetByIdSql { get; set; }
         public string GetByIdsSql { get; set; }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,6 +52,31 @@ namespace DapperExtensions
                 }
             }
             return sb.ToString();
+        }
+
+        public static IEnumerable GetMultiExec(object param)
+        {
+            return (param is IEnumerable && !(param is string || param is IEnumerable<KeyValuePair<string, object>>)) ? (IEnumerable)param : null;
+        }
+
+        /// <summary>
+        /// 判断输入参数是否有个数，用于in判断
+        /// </summary>
+        /// <param name="param"></param>
+        /// <returns></returns>
+        public static bool ObjectIsEmpty(object param)
+        {
+            bool result = true;
+            IEnumerable data = GetMultiExec(param);
+            if (data != null)
+            {
+                foreach (var item in data)
+                {
+                    result = false;
+                    break;
+                }
+            }
+            return result;
         }
 
         /// <summary>

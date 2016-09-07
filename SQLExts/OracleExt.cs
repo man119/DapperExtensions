@@ -35,7 +35,6 @@ namespace DapperExtensions.OracleExt
                 if (sqls.HasKey && sqls.IsIdentity) //有主键并且是自增
                 {
                     sqls.InsertSql = string.Format("INSERT INTO \"{0}\"({1})VALUES({2})", sqls.TableName, FieldsExtKey, FieldsAtExtKey);
-                    sqls.InsertBatchSql = string.Format("INSERT INTO \"{0}\"({1})VALUES({2})", sqls.TableName, FieldsExtKey, FieldsAtExtKey);
                     sqls.InsertIdentitySql = string.Format("INSERT INTO \"{0}\"({1})VALUES({2})", sqls.TableName, Fields, FieldsAt);
                 }
                 else
@@ -74,14 +73,7 @@ namespace DapperExtensions.OracleExt
         public static int InsertBatch<T>(this IDbConnection conn, IEnumerable<T> entitys, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
-            if (sqls.HasKey && sqls.IsIdentity)
-            {
-                return conn.Execute(sqls.InsertBatchSql, entitys, transaction, commandTimeout);
-            }
-            else
-            {
-                return conn.Execute(sqls.InsertSql, entitys, transaction, commandTimeout);
-            }
+            return conn.Execute(sqls.InsertSql, entitys, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -224,6 +216,9 @@ namespace DapperExtensions.OracleExt
         /// </summary>
         private static IEnumerable<T> GetByIdsBase<T>(this IDbConnection conn, Type t, object ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
+            if (DapperExtCommon.ObjectIsEmpty(ids))
+                return new List<T>();
+
             DapperExtSqls sqls = GetDapperExtSqls(t);
             if (sqls.HasKey)
             {
@@ -251,6 +246,9 @@ namespace DapperExtensions.OracleExt
         /// </summary>
         public static IEnumerable<dynamic> GetByIdsDynamic<T>(this IDbConnection conn, object ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
+            if (DapperExtCommon.ObjectIsEmpty(ids))
+                return new List<dynamic>();
+
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey)
             {
@@ -367,6 +365,9 @@ namespace DapperExtensions.OracleExt
         /// </summary>
         public static int DeleteByIds<T>(this IDbConnection conn, object ids, IDbTransaction transaction = null, int? commandTimeout = null)
         {
+            if (DapperExtCommon.ObjectIsEmpty(ids))
+                return 0;
+
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey)
             {
@@ -452,7 +453,7 @@ namespace DapperExtensions.OracleExt
         /// <summary>
         /// 根据条件修改数据
         /// </summary>
-        public static int UpdateByWhere<T>(this IDbConnection conn, string updateFields, string where, object entity, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static int UpdateByWhere<T>(this IDbConnection conn, string where, string updateFields, object entity, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             updateFields = DapperExtCommon.GetFieldsEqStr(updateFields.Split(',').ToList(), "\"", "\"");
@@ -593,7 +594,7 @@ namespace DapperExtensions.OracleExt
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        private static IEnumerable<T> GetByWhereBase<T>(this IDbConnection conn, Type t, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        private static IEnumerable<T> GetByWhereBase<T>(this IDbConnection conn, Type t, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(t);
             if (returnFields == null)
@@ -606,7 +607,7 @@ namespace DapperExtensions.OracleExt
         /// <summary>
         /// 根据查询条件获取Dynamic数据
         /// </summary>
-        public static IEnumerable<dynamic> GetByWhereDynamic<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<dynamic> GetByWhereDynamic<T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (returnFields == null)
@@ -619,17 +620,17 @@ namespace DapperExtensions.OracleExt
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        public static IEnumerable<T> GetByWhere<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<T> GetByWhere<T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetByWhereBase<T>(conn, typeof(T), returnFields, where, param, orderBy, transaction, commandTimeout);
+            return GetByWhereBase<T>(conn, typeof(T), where, param, returnFields, orderBy, transaction, commandTimeout);
         }
 
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        public static IEnumerable<T> GetByWhere<Table, T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<T> GetByWhere<Table, T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetByWhereBase<T>(conn, typeof(Table), returnFields, where, param, orderBy, transaction, commandTimeout);
+            return GetByWhereBase<T>(conn, typeof(Table), where, param, returnFields, orderBy, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -709,7 +710,7 @@ namespace DapperExtensions.OracleExt
         /// <summary>
         /// 获取分页数据
         /// </summary>
-        private static IEnumerable<dynamic> GetByPageDynamicBase<T>(this IDbConnection conn, Type t, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<dynamic> GetByPageDynamic<T>(this IDbConnection conn, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (returnFields == null)
@@ -765,25 +766,9 @@ namespace DapperExtensions.OracleExt
         }
 
         /// <summary>
-        /// 获取分页数据
-        /// </summary>
-        public static IEnumerable<dynamic> GetByPageDynamic<T>(this IDbConnection conn, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
-        {
-            return GetByPageDynamicBase<T>(conn, typeof(T), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
-        }
-
-        /// <summary>
-        /// 获取分页数据
-        /// </summary>
-        public static IEnumerable<dynamic> GetByPageDynamic<Table, T>(this IDbConnection conn, int pageIndex, int pageSize, out decimal total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
-        {
-            return GetByPageDynamicBase<T>(conn, typeof(Table), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
-        }
-
-        /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        private static T GetByWhereFirstBase<T>(this IDbConnection conn, Type t, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        private static T GetByWhereFirstBase<T>(this IDbConnection conn, Type t, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(t);
             if (returnFields == null)
@@ -796,7 +781,7 @@ namespace DapperExtensions.OracleExt
         /// <summary>
         /// 根据查询条件获取Dynamic数据
         /// </summary>
-        public static dynamic GetByWhereFirstDynamic<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static dynamic GetByWhereFirstDynamic<T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (returnFields == null)
@@ -809,18 +794,58 @@ namespace DapperExtensions.OracleExt
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        public static T GetByWhereFirst<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static T GetByWhereFirst<T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetByWhereFirstBase<T>(conn, typeof(T), returnFields, where, param, orderBy, transaction, commandTimeout);
+            return GetByWhereFirstBase<T>(conn, typeof(T), where, param, returnFields, orderBy, transaction, commandTimeout);
         }
 
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        public static T GetByWhereFirst<Table, T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static T GetByWhereFirst<Table, T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetByWhereFirstBase<T>(conn, typeof(Table), returnFields, where, param, orderBy, transaction, commandTimeout);
+            return GetByWhereFirstBase<T>(conn, typeof(Table), where, param, returnFields, orderBy, transaction, commandTimeout);
         }
+
+
+        private static IEnumerable<T> GetByInBase<T>(this IDbConnection conn, Type t, string field, object ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            if (DapperExtCommon.ObjectIsEmpty(ids))
+                return new List<T>();
+
+            DapperExtSqls sqls = GetDapperExtSqls(t);
+            DynamicParameters dpar = new DynamicParameters();
+            dpar.Add("@ids", ids);
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+            string sql = string.Format("SELECT {0} FROM \"{1}\" WHERE \"{2}\" IN @ids", returnFields, sqls.TableName, field);
+            return conn.Query<T>(sql, dpar, transaction, true, commandTimeout);
+        }
+
+        public static IEnumerable<dynamic> GetByInDynamic<T>(this IDbConnection conn,string field, object ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            if (DapperExtCommon.ObjectIsEmpty(ids))
+                return new List<dynamic>();
+
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            DynamicParameters dpar = new DynamicParameters();
+            dpar.Add("@ids", ids);
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+            string sql = string.Format("SELECT {0} FROM \"{1}\" WHERE \"{2}\" IN @ids", returnFields, sqls.TableName, field);
+            return conn.Query(sql, dpar, transaction, true, commandTimeout);
+        }
+
+        public static IEnumerable<T> GetByIn<T>(this IDbConnection conn, string field, object ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByInBase<T>(conn, typeof(T), field, ids, returnFields, transaction, commandTimeout);
+        }
+
+        public static IEnumerable<T> GetByIn<Table, T>(this IDbConnection conn, string field, object ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByInBase<T>(conn, typeof(Table), field, ids, returnFields, transaction, commandTimeout);
+        }
+
 
     }
 }

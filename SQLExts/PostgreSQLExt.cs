@@ -34,8 +34,7 @@ namespace DapperExtensions.PostgreSQLExt
 
                 if (sqls.HasKey && sqls.IsIdentity) //有主键并且是自增
                 {
-                    sqls.InsertSql = string.Format("INSERT INTO \"{0}\"({1})VALUES({2})RETURNING {3}", sqls.TableName, FieldsExtKey, FieldsAtExtKey, sqls.KeyName);
-                    sqls.InsertBatchSql = string.Format("INSERT INTO \"{0}\"({1})VALUES({2})", sqls.TableName, FieldsExtKey, FieldsAtExtKey, sqls.KeyName);
+                    sqls.InsertSql = string.Format("INSERT INTO \"{0}\"({1})VALUES({2})", sqls.TableName, FieldsExtKey, FieldsAtExtKey);
                     sqls.InsertIdentitySql = string.Format("INSERT INTO \"{0}\"({1})VALUES({2})", sqls.TableName, Fields, FieldsAt);
                 }
                 else
@@ -69,18 +68,18 @@ namespace DapperExtensions.PostgreSQLExt
             {
                 switch (sqls.KeyType)
                 {
-                    case "Int32": return conn.ExecuteScalar<int>(sqls.InsertSql, entity, transaction, commandTimeout); //int
-                    case "Int64": return conn.ExecuteScalar<long>(sqls.InsertSql, entity, transaction, commandTimeout); //long
-                    case "Decimal": return conn.ExecuteScalar<decimal>(sqls.InsertSql, entity, transaction, commandTimeout); //decimal
-                    case "UInt32": return conn.ExecuteScalar<uint>(sqls.InsertSql, entity, transaction, commandTimeout); //uint
-                    case "UInt64": return conn.ExecuteScalar<ulong>(sqls.InsertSql, entity, transaction, commandTimeout); //ulong
-                    case "Double": return conn.ExecuteScalar<double>(sqls.InsertSql, entity, transaction, commandTimeout); //double
-                    case "Single": return conn.ExecuteScalar<float>(sqls.InsertSql, entity, transaction, commandTimeout); //float
-                    case "Byte": return conn.ExecuteScalar<byte>(sqls.InsertSql, entity, transaction, commandTimeout);  //byte
-                    case "SByte": return conn.ExecuteScalar<sbyte>(sqls.InsertSql, entity, transaction, commandTimeout); //sbyte
-                    case "Int16": return conn.ExecuteScalar<short>(sqls.InsertSql, entity, transaction, commandTimeout); //short
-                    case "UInt16": return conn.ExecuteScalar<ushort>(sqls.InsertSql, entity, transaction, commandTimeout); //ushort
-                    default: return 0;
+                    case "Int32": return conn.ExecuteScalar<int>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //int
+                    case "Int64": return conn.ExecuteScalar<long>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //long
+                    case "Decimal": return conn.ExecuteScalar<decimal>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //decimal
+                    case "UInt32": return conn.ExecuteScalar<uint>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //uint
+                    case "UInt64": return conn.ExecuteScalar<ulong>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //ulong
+                    case "Double": return conn.ExecuteScalar<double>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //double
+                    case "Single": return conn.ExecuteScalar<float>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //float
+                    case "Byte": return conn.ExecuteScalar<byte>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout);  //byte
+                    case "SByte": return conn.ExecuteScalar<sbyte>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //sbyte
+                    case "Int16": return conn.ExecuteScalar<short>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //short
+                    case "UInt16": return conn.ExecuteScalar<ushort>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //ushort
+                    default: return conn.ExecuteScalar<dynamic>(sqls.InsertSql + "RETURNING " + sqls.KeyName, entity, transaction, commandTimeout); //dynamic
                 }
             }
             else
@@ -95,14 +94,7 @@ namespace DapperExtensions.PostgreSQLExt
         public static int InsertBatch<T>(this IDbConnection conn, IEnumerable<T> entitys, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
-            if (sqls.HasKey && sqls.IsIdentity)
-            {
-                return conn.Execute(sqls.InsertBatchSql, entitys, transaction, commandTimeout);
-            }
-            else
-            {
-                return conn.Execute(sqls.InsertSql, entitys, transaction, commandTimeout);
-            }
+            return conn.Execute(sqls.InsertSql, entitys, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -244,13 +236,17 @@ namespace DapperExtensions.PostgreSQLExt
         /// </summary>
         private static IEnumerable<T> GetByIdsBase<T>(this IDbConnection conn, Type t, IEnumerable<dynamic> ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
+            if (ids == null || ids.Count() == 0)
+                return new List<T>();
+
             DapperExtSqls sqls = GetDapperExtSqls(t);
             if (sqls.HasKey)
             {
                 string idsStr = string.Join(",", ids);
                 if (returnFields == null)
                 {
-                    return conn.Query<T>(sqls.GetByIdsSql.Replace("@idreplace", idsStr), null, transaction, true, commandTimeout);
+                    string idssql = sqls.GetByIdsSql;
+                    return conn.Query<T>(idssql.Replace("@idreplace", idsStr), null, transaction, true, commandTimeout);
                 }
                 else
                 {
@@ -270,13 +266,17 @@ namespace DapperExtensions.PostgreSQLExt
         /// </summary>
         public static IEnumerable<dynamic> GetByIdsDynamic<T>(this IDbConnection conn, IEnumerable<dynamic> ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
+            if (ids == null || ids.Count() == 0)
+                return new List<dynamic>();
+
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey)
             {
                 string idsStr = string.Join(",", ids);
                 if (returnFields == null)
                 {
-                    return conn.Query(sqls.GetByIdsSql.Replace("@idreplace", idsStr), null, transaction, true, commandTimeout);
+                    string idssql = sqls.GetByIdsSql;
+                    return conn.Query(idssql.Replace("@idreplace", idsStr), null, transaction, true, commandTimeout);
                 }
                 else
                 {
@@ -385,8 +385,10 @@ namespace DapperExtensions.PostgreSQLExt
         /// </summary>
         public static int DeleteByIds<T>(this IDbConnection conn, IEnumerable<dynamic> ids, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (ids == null || ids.Count() == 0)
+                return 0;
 
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (sqls.HasKey)
             {
                 string idsStr = string.Join(",", ids);
@@ -470,7 +472,7 @@ namespace DapperExtensions.PostgreSQLExt
         /// <summary>
         /// 根据条件修改数据
         /// </summary>
-        public static int UpdateByWhere<T>(this IDbConnection conn, string updateFields, string where, object entity, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static int UpdateByWhere<T>(this IDbConnection conn, string where, string updateFields, object entity, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             updateFields = DapperExtCommon.GetFieldsEqStr(updateFields.Split(',').ToList(), "\"", "\"");
@@ -602,7 +604,7 @@ namespace DapperExtensions.PostgreSQLExt
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        private static IEnumerable<T> GetByWhereBase<T>(this IDbConnection conn, Type t, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        private static IEnumerable<T> GetByWhereBase<T>(this IDbConnection conn, Type t, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(t);
             if (returnFields == null)
@@ -615,7 +617,7 @@ namespace DapperExtensions.PostgreSQLExt
         /// <summary>
         /// 根据查询条件获取Dynamic数据
         /// </summary>
-        public static IEnumerable<dynamic> GetByWhereDynamic<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<dynamic> GetByWhereDynamic<T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (returnFields == null)
@@ -628,17 +630,17 @@ namespace DapperExtensions.PostgreSQLExt
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        public static IEnumerable<T> GetByWhere<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<T> GetByWhere<T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetByWhereBase<T>(conn, typeof(T), returnFields, where, param, orderBy, transaction, commandTimeout);
+            return GetByWhereBase<T>(conn, typeof(T), where, param, returnFields, orderBy, transaction, commandTimeout);
         }
 
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        public static IEnumerable<T> GetByWhere<Table, T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<T> GetByWhere<Table, T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetByWhereBase<T>(conn, typeof(Table), returnFields, where, param, orderBy, transaction, commandTimeout);
+            return GetByWhereBase<T>(conn, typeof(Table), where, param, returnFields, orderBy, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -712,9 +714,9 @@ namespace DapperExtensions.PostgreSQLExt
         /// <summary>
         /// 获取分页数据
         /// </summary>
-        private static IEnumerable<dynamic> GetByPageDynamicBase<T>(this IDbConnection conn, Type t, int pageIndex, int pageSize, out long total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<dynamic> GetByPageDynamic<T>(this IDbConnection conn, int pageIndex, int pageSize, out long total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            DapperExtSqls sqls = GetDapperExtSqls(t);
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (returnFields == null)
                 returnFields = sqls.AllFields;
 
@@ -763,25 +765,9 @@ namespace DapperExtensions.PostgreSQLExt
         }
 
         /// <summary>
-        /// 获取分页数据
-        /// </summary>
-        public static IEnumerable<dynamic> GetByPageDynamic<T>(this IDbConnection conn, int pageIndex, int pageSize, out long total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
-        {
-            return GetByPageDynamicBase<T>(conn, typeof(T), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
-        }
-
-        /// <summary>
-        /// 获取分页数据
-        /// </summary>
-        public static IEnumerable<dynamic> GetByPageDynamic<Table, T>(this IDbConnection conn, int pageIndex, int pageSize, out long total, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
-        {
-            return GetByPageDynamicBase<T>(conn, typeof(Table), pageIndex, pageSize, out total, returnFields, where, param, orderBy, transaction, commandTimeout);
-        }
-
-        /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        private static T GetByWhereFirstBase<T>(this IDbConnection conn, Type t, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        private static T GetByWhereFirstBase<T>(this IDbConnection conn, Type t, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(t);
             if (returnFields == null)
@@ -794,7 +780,7 @@ namespace DapperExtensions.PostgreSQLExt
         /// <summary>
         /// 根据查询条件获取Dynamic数据
         /// </summary>
-        public static dynamic GetByWhereFirstDynamic<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static dynamic GetByWhereFirstDynamic<T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
             if (returnFields == null)
@@ -807,18 +793,58 @@ namespace DapperExtensions.PostgreSQLExt
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        public static T GetByWhereFirst<T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static T GetByWhereFirst<T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetByWhereFirstBase<T>(conn, typeof(T), returnFields, where, param, orderBy, transaction, commandTimeout);
+            return GetByWhereFirstBase<T>(conn, typeof(T), where, param, returnFields, orderBy, transaction, commandTimeout);
         }
 
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        public static T GetByWhereFirst<Table, T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static T GetByWhereFirst<Table, T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
-            return GetByWhereFirstBase<T>(conn, typeof(Table), returnFields, where, param, orderBy, transaction, commandTimeout);
+            return GetByWhereFirstBase<T>(conn, typeof(Table), where, param, returnFields, orderBy, transaction, commandTimeout);
         }
+
+
+
+        private static IEnumerable<T> GetByInBase<T>(this IDbConnection conn, Type t, string field, IEnumerable<dynamic> ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            if (ids == null || ids.Count() == 0)
+                return new List<T>();
+
+            DapperExtSqls sqls = GetDapperExtSqls(t);
+            string idsStr = string.Join(",", ids);
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+            string sql = string.Format("SELECT {0} FROM \"{1}\" WHERE \"{2}\" IN ({3})", returnFields, sqls.TableName, field, idsStr);
+            return conn.Query<T>(sql, null, transaction, true, commandTimeout);
+        }
+
+
+        public static IEnumerable<dynamic> GetByInDynamic<T>(this IDbConnection conn, string field, IEnumerable<dynamic> ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            if (ids == null || ids.Count() == 0)
+                return new List<dynamic>();
+
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            string idsStr = string.Join(",", ids);
+            if (returnFields == null)
+                returnFields = sqls.AllFields;
+            string sql = string.Format("SELECT {0} FROM \"{1}\" WHERE \"{2}\" IN ({3})", returnFields, sqls.TableName, field, idsStr);
+            return conn.Query(sql, null, transaction, true, commandTimeout);
+        }
+
+        public static IEnumerable<T> GetByIn<T>(this IDbConnection conn, string field, IEnumerable<dynamic> ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByInBase<T>(conn, typeof(T), field, ids, returnFields, transaction, commandTimeout);
+        }
+
+        public static IEnumerable<T> GetByIn<Table, T>(this IDbConnection conn, string field, IEnumerable<dynamic> ids, string returnFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            return GetByInBase<T>(conn, typeof(Table), field, ids, returnFields, transaction, commandTimeout);
+        }
+
 
     }
 }
