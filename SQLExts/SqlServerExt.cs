@@ -132,7 +132,7 @@ namespace DapperExtensions.SqlServerExt
         }
 
         /// <summary>
-        /// 根据Id，若存在则更新，不存在就插入，连id都一起插入
+        /// 根据Id，若存在则更新，不存在就插入
         /// </summary>
         public static dynamic InsertOrUpdate<T>(this IDbConnection conn, T entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
@@ -141,22 +141,31 @@ namespace DapperExtensions.SqlServerExt
             {
                 int result = UpdateById<T>(conn, entity, updateFields, transaction, commandTimeout);
                 if (result == 0)
-                {
-                    if (sqls.IsIdentity)
-                    {
-                        return InsertIdentity<T>(conn, entity, transaction, commandTimeout);
-                    }
-                    else
-                    {
-                        return Insert<T>(conn, entity, transaction, commandTimeout);
-                    }
-                }
-
+                    return Insert<T>(conn, entity, transaction, commandTimeout);
                 return result;
             }
             else
             {
-                throw new ArgumentException("表" + sqls.TableName + "没有自增键，无法进行InsertOrUpdate。");
+                throw new ArgumentException("表" + sqls.TableName + "没有主键，无法进行InsertOrUpdate。");
+            }
+        }
+
+        /// <summary>
+        /// 根据Id，若存在则更新，不存在就插入，连id都一起插入
+        /// </summary>
+        public static dynamic InsertOrUpdateIdentity<T>(this IDbConnection conn, T entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        {
+            DapperExtSqls sqls = GetDapperExtSqls(typeof(T));
+            if (sqls.HasKey && sqls.IsIdentity)
+            {
+                int result = UpdateById<T>(conn, entity, updateFields, transaction, commandTimeout);
+                if (result == 0)
+                    return InsertIdentity<T>(conn, entity, transaction, commandTimeout);
+                return result;
+            }
+            else
+            {
+                throw new ArgumentException("表" + sqls.TableName + "没有自增键，无法进行InsertOrUpdateIdentity。");
             }
         }
 

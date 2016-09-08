@@ -110,7 +110,7 @@ namespace DapperExtensions.OracleExt
 
 
         /// <summary>
-        /// 根据Id，若存在则更新，不存在就插入，连id都一起插入
+        /// 根据Id，若存在则更新，不存在就插入
         /// </summary>
         public static int InsertOrUpdate<T>(this IDbConnection conn, T entity, string updateFields = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
@@ -119,22 +119,12 @@ namespace DapperExtensions.OracleExt
             {
                 int result = UpdateById(conn, entity, updateFields, transaction, commandTimeout);
                 if (result == 0)
-                {
-                    if (sqls.IsIdentity)
-                    {
-                        result = InsertIdentity(conn, entity, transaction, commandTimeout);
-                    }
-                    else
-                    {
-                        result = Insert(conn, entity, transaction, commandTimeout);
-                    }
-                }
-
+                    result = Insert(conn, entity, transaction, commandTimeout);
                 return result;
             }
             else
             {
-                throw new ArgumentException("表" + sqls.TableName + "没有自增键，无法进行InsertOrUpdate。");
+                throw new ArgumentException("表" + sqls.TableName + "没有主键，无法进行InsertOrUpdate。");
             }
         }
 
