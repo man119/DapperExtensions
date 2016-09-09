@@ -682,7 +682,7 @@ namespace DapperExtensions.SqlServerExt
         /// <summary>
         /// 根据查询条件获取数据
         /// </summary>
-        public static IEnumerable<T> GetByWhere<Table, T>(this IDbConnection conn, string returnFields = null, string where = null, object param = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
+        public static IEnumerable<T> GetByWhere<Table, T>(this IDbConnection conn, string where = null, object param = null, string returnFields = null, string orderBy = null, IDbTransaction transaction = null, int? commandTimeout = null)
         {
             return GetByWhereBase<T>(conn, typeof(Table), where, param, returnFields, orderBy, transaction, commandTimeout);
         }
