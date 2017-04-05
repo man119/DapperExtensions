@@ -1,6 +1,0 @@
-E:\项目\TestDapper\DapperExtensions\bin\Release\DapperExtensions.dll
-E:\项目\TestDapper\DapperExtensions\bin\Release\DapperExtensions.pdb
-E:\项目\TestDapper\DapperExtensions\bin\Release\Dapper.dll
-E:\项目\TestDapper\DapperExtensions\obj\Release\DapperExtensions.dll
-E:\项目\TestDapper\DapperExtensions\obj\Release\DapperExtensions.pdb
-E:\项目\TestDapper\DapperExtensions\obj\Release\DapperExtensions.csprojResolveAssemblyReference.cache

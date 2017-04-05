@@ -39,7 +39,7 @@ namespace DapperExtensions
         /// </summary>
         /// <param name="fieldList"></param>
         /// <returns></returns>
-        public static string GetFieldsAtStr(IEnumerable<string> fieldList) 
+        public static string GetFieldsAtStr(IEnumerable<string> fieldList)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var item in fieldList)
@@ -130,15 +130,22 @@ namespace DapperExtensions
                 }
                 else
                 {
-                    if (attribute.GetType() == typeof(KeyAttribute)) //主键列
+                    if (attribute.GetType() != typeof(ComputedAttribute))
                     {
-                        dapperextsqls.HasKey = true;
-                        dapperextsqls.KeyName = item.Name;
-                        dapperextsqls.KeyType = item.PropertyType.Name;
-                        KeyAttribute keyAttr = (KeyAttribute)attribute;
-                        if (keyAttr.IsIdentity)
+                        if (attribute.GetType() == typeof(KeyAttribute)) //主键列
                         {
-                            dapperextsqls.IsIdentity = true;
+                            dapperextsqls.HasKey = true;
+                            dapperextsqls.KeyName = item.Name;
+                            dapperextsqls.KeyType = item.PropertyType.Name;
+                            KeyAttribute keyAttr = (KeyAttribute)attribute;
+                            if (keyAttr.IsIdentity)
+                            {
+                                dapperextsqls.IsIdentity = true;
+                            }
+                        }
+                        else
+                        {
+                            exceptKeyAndComputeproperties.Add(item);
                         }
 
                         exceptComputeproperties.Add(item);
