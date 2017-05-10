@@ -1,4 +1,8 @@
 # DapperExtensions
+
+This project is Obsolete (此类库已过时，请使用MyConnections)
+Please use https://github.com/znyet/MyConnections
+
 Dapper拓展方法，需要Dapper版本≥1.50,本类库基于Dapper对五种数据库进行了拓展,分别为
 SqlServer、MySQL、SQLite、PostgreSQL、Oracle(由于Oracle拓展后没有经过测试，有BUG还望指正)，对于含有组合主键的表，拓展方法有些不能用，
 暂且支持单主键的表。对于组合主键表就直接利用Dapper原生Query、Execute、ExecuteScalar等方法进行操作。
